@@ -1,39 +1,40 @@
-from app.services.document_intelligence_service import (
-    DocumentIntelligenceService,
-)
-from app.ai.chunker import Chunker
-from app.ai.embedding import EmbeddingGenerator
-
-from app.vectorstore.chroma_manager import (
-    add_memory,
-    delete_memory,
-)
-
-
 class MemoryPipeline:
 
     @staticmethod
     def process(memory):
 
-        print("Analyzing document...")
+        # Lazy imports:
+        # These modules are loaded only when a memory is processed,
+        # not while the FastAPI server is starting.
+        from app.services.document_intelligence_service import (
+            DocumentIntelligenceService,
+        )
+        from app.ai.chunker import Chunker
+        from app.ai.embedding import EmbeddingGenerator
+        from app.vectorstore.chroma_manager import (
+            add_memory,
+            delete_memory,
+        )
+
+        print("Analyzing document...", flush=True)
 
         metadata = DocumentIntelligenceService.analyze(
             memory.raw_text
         )
 
-        print("Chunking document...")
+        print("Chunking document...", flush=True)
 
         chunks = Chunker.split(
             memory.raw_text
         )
 
-        print("Generating embeddings...")
+        print("Generating embeddings...", flush=True)
 
         embeddings = EmbeddingGenerator.generate(
             chunks
         )
 
-        print("Saving vectors to Qdrant...")
+        print("Saving vectors to Qdrant...", flush=True)
 
         delete_memory(memory.id)
 
@@ -98,7 +99,13 @@ class MemoryPipeline:
                 "entities",
                 []
             ),
-            "language": metadata["language"],
-            "sentiment": metadata["sentiment"],
+            "language": metadata.get(
+                "language",
+                "unknown"
+            ),
+            "sentiment": metadata.get(
+                "sentiment",
+                "neutral"
+            ),
             "chunk_count": len(chunks),
         }
