@@ -62,7 +62,7 @@ class MemoryPipeline:
         )
 
         return {
-            "summary": metadata["summary"],
+            "summary":metadata["summary"],
             "title": metadata["title"],
             "memory_type": metadata.get(
                 "memory_type"
